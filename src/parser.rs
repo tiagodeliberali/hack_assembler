@@ -74,9 +74,9 @@ pub fn parse_content(lines: Vec<String>, locations: HashMap<String, usize>) -> V
 
     for line in lines {
         if line.starts_with('@') {
-            result.push(build_a_instruction(line, &mut mapper))
+            result.push(build_a_instruction(&line, &mut mapper))
         } else {
-            result.push(buld_c_instruction(line));
+            result.push(buld_c_instruction(&line));
         }
     }
 
@@ -89,7 +89,7 @@ pub fn parse_content(lines: Vec<String>, locations: HashMap<String, usize>) -> V
     result
 }
 
-fn build_a_instruction(line: String, mapper: &mut SymbolMapper) -> String {
+fn build_a_instruction(line: &String, mapper: &mut SymbolMapper) -> String {
     let line = line.replace("@", "");
 
     match line.parse::<usize>() {
@@ -98,6 +98,115 @@ fn build_a_instruction(line: String, mapper: &mut SymbolMapper) -> String {
     }
 }
 
-fn buld_c_instruction(line: String) -> String {
-    line
+fn buld_c_instruction(line: &String) -> String {
+    // dest=comp;jump
+    let mut dest = String::new();
+    let mut comp = String::from(line);
+    let mut jump = String::new();
+
+    if line.contains('=') {
+        let line_split: Vec<&str> = line.split('=').collect();
+        dest = String::from(*line_split.get(0).unwrap());
+        comp = String::from(*line_split.get(1).unwrap());
+    }
+
+    if comp.contains(';') {
+        let clone_comp = comp.clone();
+        let line_split: Vec<&str> = clone_comp.split(';').collect();
+        jump = String::from(*line_split.get(1).unwrap());
+        comp = String::from(*line_split.get(0).unwrap());
+    }
+
+    format!(
+        "111{}{}{}",
+        build_comp(comp),
+        build_dest(dest),
+        build_jump(jump)
+    )
+}
+
+fn build_comp(value: String) -> String {
+    let result = match value.as_str() {
+        "0" => "0101010",
+        "1" => "0111111",
+        "-1" => "0111010",
+
+        "D" => "0001100",
+        "A" => "0110000",
+        "M" => "1110000",
+
+        "!D" => "0001101",
+        "!A" => "0110001",
+        "!M" => "1110001",
+
+        "-D" => "0001111",
+        "-A" => "0110011",
+        "-M" => "1110011",
+
+        "D+1" => "0011111",
+        "A+1" => "0110111",
+        "M+1" => "1110111",
+
+        "D-1" => "0001110",
+        "A-1" => "0110010",
+        "M-1" => "1110010",
+
+        "D+A" => "0000010",
+        "D+M" => "1000010",
+
+        "A+D" => "0000010",
+        "M+D" => "1000010",
+
+        "D-A" => "0010011",
+        "D-M" => "1010011",
+
+        "A-D" => "0000111",
+        "M-D" => "1000111",
+
+        "D&A" => "0000000",
+        "D&M" => "1000000",
+
+        "A&D" => "0000000",
+        "M&D" => "1000000",
+
+        "D|A" => "0010101",
+        "D|M" => "1010101",
+
+        "A|D" => "0010101",
+        "M|D" => "1010101",
+    
+        _ => "ERRO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    };
+
+    format!("{}", result)
+}
+
+fn build_dest(value: String) -> String {
+    let result = match value.as_str() {
+        "M" => "001",
+        "D" => "010",
+        "MD" => "011",
+        "A" => "100",
+        "AM" => "101",
+        "AD" => "110",
+        "AMD" => "111",
+        _ => "000",
+    };
+
+    String::from(result)
+}
+
+fn build_jump(value: String) -> String {
+    let result = match value.as_str() {
+        "JGT" => "001",
+        "JEQ" => "010",
+        "JGE" => "011",
+        "JLT" => "100",
+        "JNE" => "101",
+        "JLE" => "110",
+        "JMP" => "111",
+        _ => "000",
+    };
+
+    String::from(result)
 }
