@@ -11,7 +11,7 @@ pub fn build_content(content: String) -> (Vec<String>, HashMap<String, usize>) {
             continue;
         }
 
-        if let Some(symbol) = get_symbol(line) {
+        if let Some(symbol) = get_symbol(&line) {
             locations.insert(symbol, code_lines.len());
         } else {
             code_lines.push(String::from(line));
@@ -30,10 +30,11 @@ pub fn build_content(content: String) -> (Vec<String>, HashMap<String, usize>) {
     (code_lines, locations)
 }
 
-fn clean_line(line: &str) -> &str {
+fn clean_line(line: &str) -> String {
     let line: Vec<&str> = line.split('/').collect();
     let line = line[0];
-    line.trim()
+    let line = line.trim();
+    line.replace(" ", "")
 }
 
 fn get_symbol(line: &str) -> Option<String> {
